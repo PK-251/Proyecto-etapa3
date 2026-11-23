@@ -677,15 +677,8 @@ const RENDER = {
         </div>`,
 
     adminRenderTablaTramites: (tramites) => {
-        if (!tramites || tramites.length === 0) {
-            return `
-                <div class="card">
-                    <h2 class="card-header">Gestor de Trámites (HU-005)</h2>
-                    <p class="text-center py-8 text-gray-500">No hay trámites para revisar. ¡Buen trabajo!</p>
-                </div>`;
-        }
-        
-        const rows = tramites.map(tramite => `
+        const lista = tramites ?? [];
+        const rows = lista.map(tramite => `
             <tr>
                 <td class="font-mono">${esc(tramite.expediente)}</td>
                 <td>${esc(tramite.ciudadano_nombre)} (${esc(tramite.ciudadano_dni)})</td>
@@ -704,7 +697,7 @@ const RENDER = {
             <div class="card">
                 <h2 class="card-header">Gestor de Trámites (HU-005)</h2>
                 <div class="mb-4 flex justify-between items-center">
-                    <p class="text-gray-600">Total de trámites: <strong>${tramites.length}</strong></p>
+                    <p class="text-gray-600">Total de trámites: <strong>${lista.length}</strong></p>
                     <button id="btn-refresh-tramites" class="btn btn-secundario">
                         <i class="fas fa-sync-alt"></i> Actualizar
                     </button>
@@ -722,7 +715,7 @@ const RENDER = {
                                 <th>Acciones</th>
                             </tr>
                         </thead>
-                        <tbody>${rows}</tbody>
+                        <tbody>${rows || '<tr><td colspan="7" class="text-center py-8 text-gray-500">No hay trámites para revisar. ¡Buen trabajo!</td></tr>'}</tbody>
                     </table>
                 </div>
             </div>`;
