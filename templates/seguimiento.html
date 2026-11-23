@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Consulta de seguimiento</title>
+  <link rel="icon" href="/favicon.ico">
+  <style>
+    :root { --azul:#0f4c81; --borde:#e5e7eb; --fondo:#f3f6fb; --verde:#15803d; --rojo:#b91c1c; --ambar:#b45309; }
+    * { box-sizing: border-box; margin: 0; }
+    body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; background: var(--fondo); color:#1f2937; min-height:100vh; padding:1rem; display:flex; justify-content:center; align-items:flex-start; }
+    main { background:#fff; border-radius:16px; box-shadow:0 10px 30px rgba(15,76,129,.12); max-width:520px; width:100%; margin-top:4vh; overflow:hidden; }
+    header { background:linear-gradient(135deg,#0b3a63,#1565a8); color:#fff; padding:1.4rem 1.5rem; }
+    header h1 { font-size:1.25rem; } header p { opacity:.85; font-size:.88rem; margin-top:.25rem; }
+    .cuerpo { padding:1.4rem 1.5rem 1.6rem; }
+    label { display:block; font-size:.82rem; font-weight:600; color:#4b5563; margin:.9rem 0 .3rem; }
+    input { width:100%; padding:.7rem .85rem; border:1px solid #cbd5e1; border-radius:10px; font-size:1rem; }
+    input:focus { outline:2px solid #60a5fa; border-color:#60a5fa; }
+    button { margin-top:1.2rem; width:100%; padding:.8rem; border:0; border-radius:10px; background:var(--azul); color:#fff; font-weight:700; font-size:1rem; cursor:pointer; }
+    button:disabled { opacity:.6; }
+    .error { margin-top:1rem; padding:.7rem .9rem; background:#fef2f2; color:var(--rojo); border-radius:10px; font-size:.9rem; }
+    .estado { display:inline-block; padding:.25rem .8rem; border-radius:999px; font-weight:700; font-size:.85rem; background:#e0f2fe; color:#075985; }
+    .estado.ok { background:#dcfce7; color:var(--verde); } .estado.warn { background:#fef3c7; color:var(--ambar); } .estado.bad { background:#fee2e2; color:var(--rojo); }
+    #res { margin-top:1.5rem; padding-top:1.2rem; border-top:1px dashed var(--borde); }
+    h2 { font-size:1.05rem; margin:.2rem 0 .6rem; }
+    dl { display:grid; grid-template-columns: 8rem 1fr; gap:.45rem .8rem; font-size:.92rem; margin:.9rem 0; }
+    dt { color:#6b7280; } dd { font-weight:600; }
+    ol { list-style:none; padding:0; margin-top:.8rem; }
+    li { position:relative; padding:0 0 .9rem 1.4rem; border-left:2px solid #cfe0f1; margin-left:.4rem; }
+    li:last-child { border-left-color:transparent; }
+    li::before { content:''; position:absolute; left:-.45rem; top:.2rem; width:.8rem; height:.8rem; background:#1e90ff; border:2px solid #fff; box-shadow:0 0 0 2px #cfe0f1; border-radius:50%; }
+    li b { display:block; font-size:.9rem; } li span { font-size:.78rem; color:#6b7280; }
+    .nota { margin-top:1.2rem; font-size:.78rem; color:#6b7280; text-align:center; }
+    a { color:var(--azul); }
+  </style>
+</head>
+<body>
+<main>
+  <header><h1>Consulta de seguimiento</h1><p>{{ muni }}</p></header>
+  <div class="cuerpo">
+    <form id="f" novalidate>
+      <label for="codigo">Código de seguimiento o N.º de expediente</label>
+      <input id="codigo" autocomplete="off" placeholder="Ej.: RC-2026-00001 o 2026-00001-LFU" maxlength="30">
+      <label for="dni">DNI del titular</label>
+      <input id="dni" inputmode="numeric" maxlength="8" placeholder="8 dígitos" autocomplete="off">
+      <button id="b" type="submit">Consultar</button>
+    </form>
+    <div id="error" class="error" hidden></div>
+    <div id="res" hidden></div>
+    <p class="nota">Por privacidad solo mostramos el estado y los hitos del caso. Para ver el detalle y la respuesta oficial, <a href="/">ingrese al portal</a>.</p>
+  </div>
+</main>
+<script>
+const $ = (id) => document.getElementById(id);
+const esc = (t) => String(t ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmtFecha = (iso) => { const d = new Date(iso); return isNaN(d) ? '' : d.toLocaleString('es-PE', { dateStyle: 'short', timeStyle: 'short' }); };
+const fmtDia = (iso) => iso ? iso.slice(8, 10) + '/' + iso.slice(5, 7) + '/' + iso.slice(0, 4) : '—';
+$('f').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  $('error').hidden = true; $('res').hidden = true;
+  const codigo = $('codigo').value.trim(), dni = $('dni').value.trim();
+  if (codigo.length < 8 || !/^\d{8}$/.test(dni)) { $('error').textContent = 'Ingrese el código y un DNI de 8 dígitos.'; $('error').hidden = false; return; }
+  $('b').disabled = true;
+  try {
+    const r = await fetch('/api/v1/publico/seguimiento?' + new URLSearchParams({ codigo, dni }));
+    const d = await r.json();
+    if (!r.ok) throw new Error(typeof d.detail === 'string' ? d.detail : 'No se pudo consultar.');
+    const clase = d.vencida ? 'bad' : (d.cerrado ? 'ok' : 'warn');
+    $('res').innerHTML = `<h2>${esc(d.tipo)}</h2><span class="estado ${clase}">${esc(d.estado)}</span>
+      <dl><dt>Código</dt><dd>${esc(d.codigo)}</dd><dt>Registrado</dt><dd>${esc(fmtDia(d.fecha_registro))}</dd>
+      ${d.fecha_limite ? `<dt>Plazo hasta</dt><dd>${esc(fmtDia(d.fecha_limite))}${d.vencida ? ' (vencido)' : ''}</dd>` : ''}
+      ${d.area ? `<dt>Área</dt><dd>${esc(d.area)}</dd>` : ''}</dl>
+      <ol>${d.eventos.map(ev => `<li><b>${esc(ev.titulo)}</b><span>${esc(fmtFecha(ev.fecha))}</span></li>`).join('')}</ol>`;
+    $('res').hidden = false;
+  } catch (err) { $('error').textContent = err.message; $('error').hidden = false; }
+  finally { $('b').disabled = false; }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,19 @@
+name: municipio-conecta-demo
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: municipio
+      POSTGRES_DB: municipio_conecta
+      POSTGRES_PASSWORD: ${MUNICIPIO_DEMO_PG_PASSWORD:?Falta la clave de la demo local}
+    ports:
+      - "127.0.0.1:55432:5432"
+    volumes:
+      - datos-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-h", "127.0.0.1", "-U", "municipio", "-d", "municipio_conecta"]
+      interval: 2s
+      timeout: 3s
+      retries: 35
+volumes:
+  datos-postgres:

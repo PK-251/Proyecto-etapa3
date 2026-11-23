@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+
+# Secretos y entorno
+.env
+
+# Base de datos local
+*.db
+*.db-journal
+
+# Archivos subidos por ciudadanos (datos personales)
+private_uploads/
+static/uploads/
+
+# Editor / SO
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.log

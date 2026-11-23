@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Verificación de comprobante</title>
+  <link rel="icon" href="/favicon.ico">
+  <style>
+    :root { --azul:#0f4c81; --verde:#15803d; --rojo:#b91c1c; --borde:#e5e7eb; --fondo:#f3f6fb; }
+    * { box-sizing: border-box; margin: 0; }
+    body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; background: var(--fondo);
+           color:#1f2937; min-height:100vh; display:flex; align-items:center; justify-content:center; padding:1rem; }
+    .card { background:#fff; border-radius:16px; box-shadow:0 10px 30px rgba(15,76,129,.12); max-width:460px; width:100%; overflow:hidden; }
+    .head { padding:1.5rem; text-align:center; color:#fff; }
+    .head.ok { background: var(--verde); } .head.no { background: var(--rojo); }
+    .head .ico { font-size:2.5rem; line-height:1; }
+    .head h1 { font-size:1.25rem; margin-top:.5rem; }
+    .body { padding:1.5rem; }
+    dl { display:grid; grid-template-columns: 9rem 1fr; gap:.6rem 1rem; font-size:.95rem; }
+    dt { color:#6b7280; } dd { font-weight:600; word-break:break-word; }
+    .total { margin-top:1.25rem; padding-top:1rem; border-top:1px dashed var(--borde); display:flex; justify-content:space-between; font-size:1.2rem; font-weight:700; color:var(--azul); }
+    .nota { margin-top:1.25rem; font-size:.8rem; color:#6b7280; text-align:center; }
+    .demo { margin-top:.75rem; padding:.5rem .75rem; background:#fef3c7; color:#92400e; border-radius:8px; font-size:.8rem; text-align:center; }
+  </style>
+</head>
+<body>
+  <main class="card">
+  {% if datos %}
+    <div class="head ok"><div class="ico">✔</div><h1>Comprobante válido</h1></div>
+    <div class="body">
+      <dl>
+        <dt>N.º</dt><dd>{{ datos.numero_comprobante }}</dd>
+        <dt>Emisor</dt><dd>{{ datos.emisor }}</dd>
+        <dt>Contribuyente</dt><dd>{{ datos.contribuyente }}</dd>
+        <dt>Concepto</dt><dd>{{ datos.concepto }}</dd>
+        <dt>Fecha de pago</dt><dd>{{ datos.fecha_pago.strftime('%d/%m/%Y %H:%M') }} UTC</dd>
+        <dt>Medio de pago</dt><dd>{{ datos.metodo }}</dd>
+      </dl>
+      <div class="total"><span>Total pagado</span><span>S/ {{ datos.monto }}</span></div>
+      {% if demo %}<div class="demo">Entorno de demostración: este pago es simulado y no tiene valor legal.</div>{% endif %}
+      <p class="nota">Este comprobante fue emitido por el sistema de {{ muni }}.</p>
+    </div>
+  {% else %}
+    <div class="head no"><div class="ico">✖</div><h1>No se pudo verificar</h1></div>
+    <div class="body">
+      <p>El comprobante <strong>{{ numero }}</strong> no existe o el enlace no es válido.</p>
+      <p class="nota">Verifique que escaneó el QR original de la boleta. Si cree que es un error, comuníquese con la municipalidad.</p>
+    </div>
+  {% endif %}
+  </main>
+</body>
+</html>
